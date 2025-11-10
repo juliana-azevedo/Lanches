@@ -21,3 +21,6 @@ O sistema é modularizado, com funcionalidades CRUD em seis pilares essenciais:
 | **📝 Pedido** | O sistema permitirá que o administrador consulte os pedidos realizados. | Cadastro, Consulta, Editar e Remover.|
 | **📦 Depósito** | O sistema permitirá registrar a entrada de produtos no estoque. | Cadastro, Consulta, Editar e Remover.|
 
+
+
+Link da MRB: https://miro.com/app/board/uXjVJzstlDA=/
