@@ -5,8 +5,6 @@ export async function criarCategoria(req, res) {
   try {
     const { nome, descricao } = req.body; // pega os dados do body
 
-    console.log("Dados recebidos:", req.body);
-
     const query = `
       INSERT INTO categorias (nome, descricao)
       VALUES ($1, $2)
@@ -18,7 +16,9 @@ export async function criarCategoria(req, res) {
 
     res.status(201).json(result.rows[0]);
   } catch (err) {
-    console.error(err);
+    if (err.code === "23505") {
+      return res.status(200).json(false); // nome já existe
+    }
     res.status(500).json({ erro: "Erro ao criar categoria" });
   }
 }
@@ -47,7 +47,9 @@ export async function atualizarCategoria(req, res) {
        res.status(200).json("Categoria alterada com sucesso!")
     }
   } catch(error) {
-    console.error(err);
+    if (err.code === "23505") {
+      return res.status(200).json(false); // nome já existe
+    }
     res.status(500).json({ erro: "Erro ao editar nome" });
   }
 }

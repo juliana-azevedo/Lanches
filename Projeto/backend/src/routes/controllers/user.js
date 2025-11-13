@@ -4,10 +4,13 @@ import jwt from "jsonwebtoken";
 import pool from "../../../DB/database.js";
 
 class User {
-  constructor({ id, username, email, passwordhash, googleid, authprovider, created_at, updated_at }) {
+  constructor({ id, username, email, passwordhash, googleid, authprovider, created_at, updated_at, type, telefone, endereco }) {
     this.id = id;
     this.username = username;
     this.email = email;
+    this.endereco = endereco;
+    this.telefone = telefone;
+    this.type = type;
     this.passwordHash = passwordhash;
     this.googleId = googleid; 
     this.authProvider = authprovider;
@@ -34,16 +37,20 @@ export async function login(req, res) {
 
     if (!isPasswordEqual) throw new Error("Email ou senha inválidos.");
 
+    const isAdmin = (user.type === 1);
+
     const payload = {
       id: user.id,
       username: user.username,
       email: user.email,
+      telefone: user.telefone,
+      endereco: user.endereco,
+      isAdmin: isAdmin,
     };
 
     const token = jwt.sign(payload, process.env.JWT_SECRET, {
       expiresIn: "8h",
     });
-
 
     return res.status(200).json({ token });
   } catch (error) {
@@ -54,9 +61,9 @@ export async function login(req, res) {
 // ====================== CRIAR USUÁRIO ======================
 export async function createUser(req, res) {
   try {
-    const { username, email, password } = req.body;
+    const { username, email, password, endereco, telefone } = req.body;
 
-    if (!username || !email || !password) {
+    if (!username || !email || !password || !endereco || !telefone) {
       throw new Error("Todos os campos são obrigatórios.");
     }
 
@@ -66,19 +73,15 @@ export async function createUser(req, res) {
       throw new Error("Este email já está em uso.");
     }
 
-    existingUser = await pool.query("SELECT * FROM usuarios WHERE username = $1", [username]);
-    if (existingUser.rows.length > 0) {
-      throw new Error("Este username já está em uso.");
-    }
-
-
     const id = uuidv4();
     const passwordHash = bcrypt.hashSync(password, 10);
 
+    console.log(id, username, email, passwordHash, 'local', endereco, telefone)
+
     await pool.query(
-      `INSERT INTO usuarios (id, username, email, passwordhash, authprovider)
-       VALUES ($1, $2, $3, $4, $5)`,
-      [id, username, email, passwordHash, 'local']
+      `INSERT INTO usuarios (id, username, email, passwordhash, authprovider, endereco, telefone)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+      [id, username, email, passwordHash, 'local', endereco, telefone]
     );
 
     const payload = {
@@ -86,14 +89,16 @@ export async function createUser(req, res) {
       username,
       email,
       authProvider: 'local',
+      endereco,
+      telefone,
+      isAdmin: false,
     };
-
 
     const token = jwt.sign(payload, process.env.JWT_SECRET, {
       expiresIn: "8h",
     });
 
-    return res.status(201).json({ id, username, email, token });
+    return res.status(201).json({ id, username, email, token, endereco, telefone });
   } catch (error) {
     return res.status(400).json({ message: error.message });
   }

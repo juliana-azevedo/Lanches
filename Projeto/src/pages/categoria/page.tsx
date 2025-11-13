@@ -26,7 +26,6 @@ export default function Categoria() {
       if (categorias.length === 0) {
         const data = await listarCategoria();
         if (data) setCategorias(data);
-        console.log("Categoria: Requisação feita!");
       }
     };
     reqCategorias();
@@ -87,6 +86,13 @@ export default function Categoria() {
 
         if (result.success) {
 
+          if (result.data === false) {
+            setAlertP({ id: 1, text: "⚠️ Erro: Já existe uma categoria com esse nome!"});
+            await new Promise((resolve) => setTimeout(resolve, 2000));
+            window.location.reload();
+            return;
+          }
+
           const quantity = produtos.filter((produto) => produto.idcategoria === categoriaEscolhida.id).length;
 
           if(quantity > 0) {
@@ -104,6 +110,14 @@ export default function Categoria() {
     } else {
       const result = await criarCategoria(form.nome, form.descricao);
       if (result.success) {
+
+        if (result.data === false) {
+          setAlertP({ id: 1, text: "⚠️ Erro: Já existe uma categoria com esse nome!"});
+          await new Promise((resolve) => setTimeout(resolve, 2000));
+          window.location.reload();
+          return;
+        }
+
         const novo: Categoria = {
           id: result.data?.id,
           nome: form.nome,
@@ -267,8 +281,6 @@ export default function Categoria() {
                     const qtdProdutos = produtos.filter(
                       (produto) => produto.idcategoria === p.id
                     ).length;
-
-                    console.log(JSON.stringify(produtos, null, 2))
 
                     return (
                       <tr

@@ -1,6 +1,6 @@
 import { useState, useEffect, type ChangeEvent, type FormEvent } from "react";
 import listarCategoria from "../../service/get/listarCategoria";
-import { useMainContext } from "../../contexts/context";
+import { useMainContext, useUserContext } from "../../contexts/context";
 import deletarProduto from "../../service/delete/deletarProduto";
 import atualizarProduto from "../../service/put/putProduto";
 import criarProduto from "../../service/post/criarProduto";
@@ -15,9 +15,11 @@ import {
   TextField,
 } from "@mui/material";
 import Alerta, { type alertProps } from "../../components/alerta";
+import { decodeToken } from "../../service/api.service";
 
 export default function Produto() {
   const { categorias, setCategorias, produtos, setProdutos } = useMainContext();
+  const { user } = useUserContext();
   const [form, setForm] = useState<Produto>({
     nome: "",
     preco: null,
@@ -35,13 +37,8 @@ export default function Produto() {
       if (categorias.length === 0) {
         const data = await listarCategoria();
         if (data) setCategorias(data);
-        console.log("Produto: Requisação feita!");
       }
     };
-    reqCategorias();
-  }, []);
-
-  useEffect(() => {
     const reqProdutos = async () => {
       if (produtos.length === 0) {
         const data = await listarProduto();
@@ -53,12 +50,8 @@ export default function Produto() {
       }
     };
     reqProdutos();
+    reqCategorias();
   }, []);
-
-  // 🔹 Salvar no localStorage
-  useEffect(() => {
-    localStorage.setItem("produtos", JSON.stringify(produtos));
-  }, [produtos]);
 
   const handleChange = (
     e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
@@ -90,7 +83,7 @@ export default function Produto() {
     e.preventDefault();
 
     if (!form.nome || !form.preco || !form.categoria || !form.descricao) {
-      setAlertP({id: 1, text: "⚠️ Erro: Preencha todos os campos!"});
+      setAlertP({ id: 1, text: "⚠️ Erro: Preencha todos os campos!" });
       return;
     }
 
@@ -126,6 +119,16 @@ export default function Produto() {
           );
 
           if (result.success) {
+            if (result.data === false) {
+              setAlertP({
+                id: 1,
+                text: "⚠️ Erro: Já existe um produto com esse nome!",
+              });
+              await new Promise((resolve) => setTimeout(resolve, 2000));
+              window.location.reload();
+              return;
+            }
+
             produtoEscolhido.nome = form.nome;
             produtoEscolhido.preco = form.preco;
             produtoEscolhido.descricao = form.descricao;
@@ -134,7 +137,7 @@ export default function Produto() {
             setProdutos([...produtos]);
             setEditando(null);
           } else {
-            console.error("Erro ao atualizar categoria:", result.error);
+            console.error("Erro ao atualizar produto:", result.error);
           }
         }
       }
@@ -151,6 +154,16 @@ export default function Produto() {
           form.descricao
         );
         if (result.success) {
+          if (result.data === false) {
+            setAlertP({
+              id: 1,
+              text: "⚠️ Erro: Já existe um produto com esse nome!",
+            });
+            await new Promise((resolve) => setTimeout(resolve, 2000));
+            window.location.reload();
+            return;
+          }
+
           const novo: Produto = {
             id: result.data?.id,
             nome: form.nome,
@@ -168,7 +181,6 @@ export default function Produto() {
 
   const handleEditar = (index: number) => {
     const produtoEscolhido = produtos.find((cat) => cat.id === index);
-    console.log(produtoEscolhido);
     if (produtoEscolhido) {
       setForm({
         nome: produtoEscolhido.nome,
@@ -243,101 +255,115 @@ export default function Produto() {
         </DialogActions>
       </Dialog>
 
+      <button onClick={()=> {
+        console.log("teste: ", localStorage.getItem("token"))
+         localStorage.removeItem("token");
+         console.log("teste: ", localStorage.getItem("token"))
+          window.location.href = "/login";
+      }} className="bg-black">APERTA AQUI NAMORAL</button>
+
       <div className="bg-white/90 backdrop-blur-md rounded-3xl shadow-2xl p-8 max-w-6xl mx-auto border border-red-200">
         <h1 className="text-5xl font-extrabold text-center mb-10 text-red-600 drop-shadow">
           🍔 <span className="text-yellow-500">+Lanches</span> Cardápio
         </h1>
 
         {/* Formulário */}
-        <form
-          onSubmit={handleSubmit}
-          className="bg-gradient-to-b from-yellow-50 to-white border border-yellow-200 shadow-md rounded-2xl p-6 max-w-lg mx-auto mb-12"
-        >
-          <h2 className="text-2xl font-bold mb-6 text-red-600 text-center">
-            {editando !== null ? "✏️ Editar Produto" : "➕ Cadastrar Produto"}
-          </h2>
+        {user?.isAdmin && (
+          <form
+            onSubmit={handleSubmit}
+            className="bg-gradient-to-b from-yellow-50 to-white border border-yellow-200 shadow-md rounded-2xl p-6 max-w-lg mx-auto mb-12"
+          >
+            <h2 className="text-2xl font-bold mb-6 text-red-600 text-center">
+              {editando !== null ? "✏️ Editar Produto" : "➕ Cadastrar Produto"}
+            </h2>
 
-          <div className="flex flex-col mb-4">
-            <label className="text-gray-700 font-medium mb-1">
-              🍩 Nome do produto
-            </label>
-            <input
-              type="text"
-              name="nome"
-              placeholder="Exemplo: X-Burguer"
-              value={form.nome}
-              onChange={handleChange}
-              className="w-full p-3 border-2 border-yellow-200 rounded-lg focus:ring-2 focus:ring-red-400 outline-none"
-            />
-          </div>
+            <div className="flex flex-col mb-4">
+              <label className="text-gray-700 font-medium mb-1">
+                🍩 Nome do produto
+              </label>
+              <input
+                type="text"
+                name="nome"
+                placeholder="Exemplo: X-Burguer"
+                value={form.nome}
+                onChange={handleChange}
+                className="w-full p-3 border-2 border-yellow-200 rounded-lg focus:ring-2 focus:ring-red-400 outline-none"
+              />
+            </div>
 
-          <div className="flex flex-col mb-4">
-            <label className="text-gray-700 font-medium mb-1">💰 Preço</label>
-            <input
-              type="number"
-              name="preco"
-              placeholder="Exemplo: 18.90"
-              value={form.preco ?? ""}
-              onChange={handleChange}
-              className="w-full p-3 border-2 border-yellow-200 rounded-lg focus:ring-2 focus:ring-red-400 outline-none"
-            />
-          </div>
+            <div className="flex flex-col mb-4">
+              <label className="text-gray-700 font-medium mb-1">💰 Preço</label>
+              <input
+                type="number"
+                name="preco"
+                placeholder="Exemplo: 18.90"
+                value={form.preco ?? ""}
+                onChange={handleChange}
+                className="w-full p-3 border-2 border-yellow-200 rounded-lg focus:ring-2 focus:ring-red-400 outline-none"
+              />
+            </div>
 
-          <div className="flex flex-col mb-4">
-            <label className="text-gray-700 font-medium mb-1">
-              🍟 Categoria
-            </label>
-            <select
-              name="categoria"
-              value={form.categoria}
-              onChange={handleChange}
-              className="w-full p-3 border-2 border-yellow-200 bg-white rounded-lg focus:ring-2 focus:ring-red-400 outline-none"
-            >
-              <option value="">Selecione a categoria</option>
-              {categorias.map((cat, index) => (
-                <option key={index} value={cat.nome}>
-                  {cat.nome}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="flex flex-col mb-6">
-            <label className="text-gray-700 font-medium mb-1">
-              📝 Descrição
-            </label>
-            <textarea
-              name="descricao"
-              placeholder="Exemplo: Hambúrguer artesanal com queijo e bacon"
-              value={form.descricao}
-              onChange={handleChange}
-              className="w-full p-3 border-2 border-yellow-200 rounded-lg focus:ring-2 focus:ring-red-400 outline-none"
-              rows={3}
-            ></textarea>
-          </div>
-
-          <div className="flex gap-3">
-            <button
-              type="submit"
-              className="flex-1 bg-red-600 hover:bg-red-700 text-white font-semibold px-4 py-2.5 rounded-lg transition-all duration-200 shadow-md"
-            >
-              {editando !== null ? "Salvar Alterações" : "Adicionar Produto"}
-            </button>
-
-            {editando !== null && (
-              <button
-                onClick={() => {
-                  setEditando(null);
-                  setForm({ nome: "", preco: 0, descricao: "", categoria: "" });
-                }}
-                type="button"
-                className="flex-1 bg-gray-400 hover:bg-gray-500 text-white font-semibold px-4 py-2.5 rounded-lg transition-all duration-200 shadow-md"
+            <div className="flex flex-col mb-4">
+              <label className="text-gray-700 font-medium mb-1">
+                🍟 Categoria
+              </label>
+              <select
+                name="categoria"
+                value={form.categoria}
+                onChange={handleChange}
+                className="w-full p-3 border-2 border-yellow-200 bg-white rounded-lg focus:ring-2 focus:ring-red-400 outline-none"
               >
-                Cancelar
+                <option value="">Selecione a categoria</option>
+                {categorias.map((cat, index) => (
+                  <option key={index} value={cat.nome}>
+                    {cat.nome}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="flex flex-col mb-6">
+              <label className="text-gray-700 font-medium mb-1">
+                📝 Descrição
+              </label>
+              <textarea
+                name="descricao"
+                placeholder="Exemplo: Hambúrguer artesanal com queijo e bacon"
+                value={form.descricao}
+                onChange={handleChange}
+                className="w-full p-3 border-2 border-yellow-200 rounded-lg focus:ring-2 focus:ring-red-400 outline-none"
+                rows={3}
+              ></textarea>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                type="submit"
+                className="flex-1 bg-red-600 hover:bg-red-700 text-white font-semibold px-4 py-2.5 rounded-lg transition-all duration-200 shadow-md"
+              >
+                {editando !== null ? "Salvar Alterações" : "Adicionar Produto"}
               </button>
-            )}
-          </div>
-        </form>
+
+              {editando !== null && (
+                <button
+                  onClick={() => {
+                    setEditando(null);
+                    setForm({
+                      nome: "",
+                      preco: 0,
+                      descricao: "",
+                      categoria: "",
+                    });
+                  }}
+                  type="button"
+                  className="flex-1 bg-gray-400 hover:bg-gray-500 text-white font-semibold px-4 py-2.5 rounded-lg transition-all duration-200 shadow-md"
+                >
+                  Cancelar
+                </button>
+              )}
+            </div>
+          </form>
+        )}
 
         {/* Lista */}
         <div className="max-w-5xl mx-auto bg-white/95 shadow-xl rounded-2xl overflow-hidden border border-yellow-200">
@@ -367,9 +393,11 @@ export default function Produto() {
                       <th className="py-4 px-6 font-semibold">Categoria</th>
                       <th className="py-4 px-6 font-semibold">Preço</th>
                       <th className="py-4 px-6 font-semibold">Descrição</th>
-                      <th className="py-4 px-6 font-semibold text-center">
-                        Opções
-                      </th>
+                      {user?.isAdmin && (
+                        <th className="py-4 px-6 font-semibold text-center">
+                          Opções
+                        </th>
+                      )}
                     </tr>
                   </thead>
 
@@ -392,23 +420,24 @@ export default function Produto() {
                               {p.descricao}
                             </div>
                           </td>
-
-                          <td className="py-4 px-6 text-center">
-                            <div className="flex justify-center gap-3">
-                              <button
-                                onClick={() => handleEditar(itemId)}
-                                className="bg-yellow-400 hover:bg-yellow-500 text-white px-3 py-1.5 rounded-lg transition-all shadow-sm"
-                              >
-                                ✏️ Editar
-                              </button>
-                              <button
-                                onClick={() => handleDeleteClick(itemId)}
-                                className="bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded-lg transition-all shadow-sm"
-                              >
-                                🗑️ Excluir
-                              </button>
-                            </div>
-                          </td>
+                          {user?.isAdmin && (
+                            <td className="py-4 px-6 text-center">
+                              <div className="flex justify-center gap-3">
+                                <button
+                                  onClick={() => handleEditar(itemId)}
+                                  className="bg-yellow-400 hover:bg-yellow-500 text-white px-3 py-1.5 rounded-lg transition-all shadow-sm"
+                                >
+                                  ✏️ Editar
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteClick(itemId)}
+                                  className="bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded-lg transition-all shadow-sm"
+                                >
+                                  🗑️ Excluir
+                                </button>
+                              </div>
+                            </td>
+                          )}
                         </tr>
                       );
                     })}

@@ -5,8 +5,6 @@ export async function criarProduto(req, res) {
   try {
     const { nome, preco, categoria_id, descricao } = req.body; // pega os dados do body
 
-    console.log("Dados recebidos:", req.body);
-
     const query = `
       INSERT INTO produtos (nome, preco, categoria_id, descricao)
       VALUES ($1, $2, $3, $4)
@@ -18,7 +16,9 @@ export async function criarProduto(req, res) {
 
     res.status(201).json(result.rows[0]);
   } catch (err) {
-    console.error(err);
+    if (err.code === "23505") {
+      return res.status(200).json(false); // nome já existe
+    }
     res.status(500).json({ erro: "Erro ao criar produtos" });
   }
 }
@@ -26,7 +26,6 @@ export async function criarProduto(req, res) {
 export async function listarProduto(req, res) {
   try {
     const result = await pool.query("SELECT p.id, p.nome as nomeProduto, p.preco, p.descricao, c.nome as nomeCategoria, c.id as idCategoria FROM produtos p join categorias c on p.categoria_id = c.id");
-    console.log(JSON.stringify(result.rows, null, 2))
     res.json(result.rows);
   } catch (err) {
     console.error(err);
@@ -48,7 +47,9 @@ export async function atualizarProduto(req, res) {
        res.status(200).json("Produto alterada com sucesso!")
     }
   } catch(error) {
-    console.error(err);
+    if (err.code === "23505") {
+      return res.status(200).json(false); // nome já existe
+    }
     res.status(500).json({ erro: "Erro ao editar nome" });
   }
 }

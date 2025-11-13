@@ -24,7 +24,7 @@ export default function Login() {
 
             alert("Login realizado com sucesso!");
             // Redirecionar ou navegar:
-            navigate("/produto");
+            window.location.href = "/produto";
 
         }
     } catch (err: any) {

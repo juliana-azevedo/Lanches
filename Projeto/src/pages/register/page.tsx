@@ -5,7 +5,10 @@ import register from "../../service/post/register";
 export default function Register() {
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
+  const [endereco, setEndereco] = useState("");
+  const [telefone, setTelefone] = useState("");
   const [password, setPassword] = useState("");
+
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -14,11 +17,8 @@ export default function Register() {
     e.preventDefault();
     setError("");
     setLoading(true);
-
     try {
-      const response = await register(username, email, password);
-      console.log("teste")
-
+      const response = await register(username, email, password, endereco, telefone);
       if (response.success) {
         alert("Conta criada com sucesso!");
         navigate("/login");
@@ -52,6 +52,7 @@ export default function Register() {
             type="text"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
+            placeholder="Exemplo: Maria"
             className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring focus:ring-blue-300"
             required
           />
@@ -63,6 +64,31 @@ export default function Register() {
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            placeholder="Exemplo: maria@google.com"
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring focus:ring-blue-300"
+            required
+          />
+        </div>
+
+        <div className="mb-4">
+          <label className="block text-gray-700 text-sm mb-1">Endereço</label>
+          <input
+            type="text"
+            value={endereco}
+            onChange={(e) => setEndereco(e.target.value)}
+            placeholder="Exemplo: Rua das maritacas, bps, 199"
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring focus:ring-blue-300"
+            required
+          />
+        </div>
+
+        <div className="mb-4">
+          <label className="block text-gray-700 text-sm mb-1">Telefone</label>
+          <input
+            type="tel"
+            value={telefone}
+            onChange={(e) => setTelefone(e.target.value)}
+            placeholder="Exemplo: (11) 98765-4321"
             className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring focus:ring-blue-300"
             required
           />

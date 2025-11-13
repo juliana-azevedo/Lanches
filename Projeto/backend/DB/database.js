@@ -59,6 +59,11 @@ async function ensureTables() {
     `);
 
     await pool.query(`
+      CREATE UNIQUE INDEX IF NOT EXISTS unique_categoria_nome_lower
+      ON categorias (LOWER(nome));
+    `);
+
+    await pool.query(`
       CREATE TABLE IF NOT EXISTS produtos (
         id SERIAL PRIMARY KEY,
         nome VARCHAR(100) NOT NULL,
@@ -69,12 +74,21 @@ async function ensureTables() {
     `);
 
     await pool.query(`
+      CREATE UNIQUE INDEX IF NOT EXISTS unique_produto_nome_lower
+      ON produtos (LOWER(nome));
+    `);
+
+    await pool.query(`
       CREATE TABLE IF NOT EXISTS usuarios (
         id VARCHAR(100) PRIMARY KEY,
+        type INT DEFAULT 0,
         username VARCHAR(100) NOT NULL,
         email VARCHAR(100) NOT NULL,
         passwordhash VARCHAR(100) NOT NULL,
-        authprovider VARCHAR(50) NOT NULL
+        authprovider VARCHAR(50) NOT NULL,
+        endereco VARCHAR(100),
+        telefone VARCHAR(100),
+        UNIQUE(email)
       );
     `);
 
