@@ -7,6 +7,7 @@ import Register from "./pages/register/page";
 import AdminClients from "./pages/usuarios/page";
 import UserProfile from "./pages/perfil/page";
 import AdminRoute, { AuthGuard } from "./authGuard";
+import Carrinho from "./pages/carrinho/page";
 
 
 export default function App() {
@@ -23,6 +24,7 @@ export default function App() {
         
         <Route element={<AuthGuard />}>
           <Route path="/perfil" element={<UserProfile />} />
+          <Route path="/carrinho" element={<Carrinho />} />
         </Route>
 
        <Route element={<AdminRoute />}>

@@ -8,9 +8,17 @@ import listarProduto from "../../service/get/listarProduto";
 import type { Produto } from "../../contexts/mainContext";
 import Alerta, { type alertProps } from "../../components/alerta";
 import ConfirmDialog from "../../components/confirmDialog";
+import { useNavigate } from "react-router-dom";
 
 export default function Produto() {
-  const { categorias, setCategorias, produtos, setProdutos } = useMainContext();
+  const {
+    categorias,
+    setCategorias,
+    produtos,
+    setProdutos,
+    carrinho,
+    setCarrinho,
+  } = useMainContext();
   const { user } = useUserContext();
   const [form, setForm] = useState<Produto>({
     nome: "",
@@ -23,6 +31,7 @@ export default function Produto() {
   const [open, setOpen] = useState(false);
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [alertP, setAlertP] = useState<alertProps | null>();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const reqCategorias = async () => {
@@ -217,9 +226,44 @@ export default function Produto() {
     }
   }, [alertP]);
 
+  const adicionarAoCarrinho = (p: Produto) => {
+    const existente = carrinho.find((item) => item.id === p.id);
+
+    if (existente) {
+      existente.quantidade++;
+      setCarrinho([...carrinho]);
+    } else {
+      setCarrinho([
+        ...carrinho,
+        {
+          id: p.id!,
+          nome: p.nome,
+          preco: p.preco ?? 0,
+          quantidade: 1,
+        },
+      ]);
+    }
+
+    setAlertP({ id: 0, text: "✔️ Produto adicionado ao carrinho!" });
+  };
+
   return (
     <div className="min-h-screen bg-white bg-cover bg-fixed bg-center p-8">
       <Alerta id={alertP?.id} text={alertP?.text} />
+
+      {!user?.isAdmin && (
+        <button
+          className="fixed left-10 top-4 bg-yellow-300 text-red-700 px-4 py-2 rounded-full shadow-lg font-bold flex flex-col cursor-pointer hover:scale-125"
+          onClick={() => {
+            navigate("/carrinho");
+          }}
+        >
+          <span>
+            🛒 Carrinho: {carrinho.reduce((acc, it) => acc + it.quantidade, 0)}
+          </span>
+          <span> Ir para carrinho</span>
+        </button>
+      )}
 
       <ConfirmDialog
         open={open}
@@ -231,10 +275,15 @@ export default function Produto() {
         }}
       />
 
-      <button onClick={()=> {
-        localStorage.removeItem("token");
-        window.location.href = "/login";
-      }} className=" absolute right-12 top-4 px-6 h-10 bg-red-400 rounded-full text-white hover:scale-125 transition-transform duration-200 cursor-pointer">Sair</button>
+      <button
+        onClick={() => {
+          localStorage.removeItem("token");
+          window.location.href = "/login";
+        }}
+        className=" absolute right-12 top-4 px-6 h-10 bg-red-400 rounded-full text-white hover:scale-125 transition-transform duration-200 cursor-pointer"
+      >
+        Sair
+      </button>
 
       <div className="bg-white/90 backdrop-blur-md rounded-3xl shadow-2xl p-8 max-w-6xl mx-auto border border-red-200">
         <h1 className="text-5xl font-extrabold text-center mb-10 text-red-600 drop-shadow">
@@ -367,11 +416,9 @@ export default function Produto() {
                       <th className="py-4 px-6 font-semibold">Categoria</th>
                       <th className="py-4 px-6 font-semibold">Preço</th>
                       <th className="py-4 px-6 font-semibold">Descrição</th>
-                      {user?.isAdmin && (
-                        <th className="py-4 px-6 font-semibold text-center">
-                          Opções
-                        </th>
-                      )}
+                      <th className="py-4 px-6 font-semibold text-center">
+                        Opções
+                      </th>
                     </tr>
                   </thead>
 
@@ -394,24 +441,33 @@ export default function Produto() {
                               {p.descricao}
                             </div>
                           </td>
-                          {user?.isAdmin && (
-                            <td className="py-4 px-6 text-center">
-                              <div className="flex justify-center gap-3">
+                          <td className="py-4 px-6 text-center">
+                            <div className="flex justify-center gap-3">
+                              {user?.isAdmin ? (
+                                <>
+                                  <button
+                                    onClick={() => handleEditar(itemId)}
+                                    className="bg-yellow-400 hover:bg-yellow-500 text-white px-3 py-1.5 rounded-lg transition-all shadow-sm"
+                                  >
+                                    ✏️ Editar
+                                  </button>
+                                  <button
+                                    onClick={() => handleDeleteClick(itemId)}
+                                    className="bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded-lg transition-all shadow-sm"
+                                  >
+                                    🗑️ Excluir
+                                  </button>
+                                </>
+                              ) : (
                                 <button
-                                  onClick={() => handleEditar(itemId)}
-                                  className="bg-yellow-400 hover:bg-yellow-500 text-white px-3 py-1.5 rounded-lg transition-all shadow-sm"
+                                  onClick={() => adicionarAoCarrinho(p)}
+                                  className="bg-green-500 hover:bg-green-600 text-white px-3 py-1.5 rounded-lg transition-all shadow-sm"
                                 >
-                                  ✏️ Editar
+                                  🛒 Carrinho
                                 </button>
-                                <button
-                                  onClick={() => handleDeleteClick(itemId)}
-                                  className="bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded-lg transition-all shadow-sm"
-                                >
-                                  🗑️ Excluir
-                                </button>
-                              </div>
-                            </td>
-                          )}
+                              )}
+                            </div>
+                          </td>
                         </tr>
                       );
                     })}

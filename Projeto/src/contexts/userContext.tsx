@@ -30,6 +30,8 @@ export function UserProvider({ children }: { children: ReactNode }) {
       setLoading(false);
     }
   }, []);
+
+  
   
   return (
     <UserContext.Provider

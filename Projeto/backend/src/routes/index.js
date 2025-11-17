@@ -29,4 +29,9 @@ router.delete("/user/delete/:id", deletarUsuario);
 router.get("/user/:id", authMiddleware, getMe);
 router.put("/user/me", authMiddleware, updateMe);
 
+// router.post("/add", adicionarItemCarrinho);
+// router.get("/list", listarCarrinho);
+// router.put("/update", atualizarItemCarrinho);
+// router.delete("/delete", removerItemCarrinho);
+
 export default router;
