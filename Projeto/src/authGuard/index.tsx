@@ -5,6 +5,7 @@ import { useUserContext } from "../contexts/context";
 
 
 export const AuthGuard = () => {
+  console.log(isTokenValid())
   return isTokenValid() ? <Outlet /> : <Navigate to="/login" replace />;
 };
 

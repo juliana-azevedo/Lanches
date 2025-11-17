@@ -20,8 +20,8 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const token = decodeToken();
-    console.log("CHEGUEI, DEU BOA")
-    if (token) {
+  
+    if (token !== undefined) {
       setUser({
         id: token.id,
         username: token.username,

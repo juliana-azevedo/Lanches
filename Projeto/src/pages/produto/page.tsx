@@ -6,16 +6,8 @@ import atualizarProduto from "../../service/put/putProduto";
 import criarProduto from "../../service/post/criarProduto";
 import listarProduto from "../../service/get/listarProduto";
 import type { Produto } from "../../contexts/mainContext";
-import {
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  TextField,
-} from "@mui/material";
 import Alerta, { type alertProps } from "../../components/alerta";
-import { decodeToken } from "../../service/api.service";
+import ConfirmDialog from "../../components/confirmDialog";
 
 export default function Produto() {
   const { categorias, setCategorias, produtos, setProdutos } = useMainContext();
@@ -229,38 +221,20 @@ export default function Produto() {
     <div className="min-h-screen bg-white bg-cover bg-fixed bg-center p-8">
       <Alerta id={alertP?.id} text={alertP?.text} />
 
-      <Dialog open={open} onClose={() => setOpen(false)}>
-        <DialogTitle>
-          Você tem certeza que deseja excluir essa categoria?
-        </DialogTitle>
-        <DialogActions>
-          <Button
-            onClick={() => {
-              setOpen(false);
-            }}
-          >
-            Cancelar
-          </Button>
-          <Button
-            variant="contained"
-            onClick={() => {
-              if (selectedId !== null) {
-                handleDeletar(selectedId);
-              }
-              setOpen(false);
-            }}
-          >
-            Aceitar
-          </Button>
-        </DialogActions>
-      </Dialog>
+      <ConfirmDialog
+        open={open}
+        title="Você tem certeza que deseja excluir esse produto?"
+        onCancel={() => setOpen(false)}
+        onConfirm={() => {
+          if (selectedId) handleDeletar(selectedId);
+          setOpen(false);
+        }}
+      />
 
       <button onClick={()=> {
-        console.log("teste: ", localStorage.getItem("token"))
-         localStorage.removeItem("token");
-         console.log("teste: ", localStorage.getItem("token"))
-          window.location.href = "/login";
-      }} className="bg-black">APERTA AQUI NAMORAL</button>
+        localStorage.removeItem("token");
+        window.location.href = "/login";
+      }} className=" absolute right-12 top-4 px-6 h-10 bg-red-400 rounded-full text-white hover:scale-125 transition-transform duration-200 cursor-pointer">Sair</button>
 
       <div className="bg-white/90 backdrop-blur-md rounded-3xl shadow-2xl p-8 max-w-6xl mx-auto border border-red-200">
         <h1 className="text-5xl font-extrabold text-center mb-10 text-red-600 drop-shadow">

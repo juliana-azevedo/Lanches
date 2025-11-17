@@ -106,11 +106,13 @@ export async function createUser(req, res) {
 
 // ====================== GET ME ======================
 export async function getMe(req, res) {
+  const { id } = req.params;
   try {
     const { rows } = await pool.query(
-      "SELECT id, username, email, googleid, authprovider, created_at, updated_at FROM usuarios WHERE id = $1",
-      [req.userId]
+      "SELECT id, username, email, endereco, telefone FROM usuarios WHERE id = $1",
+      [id]
     );
+
     if (rows.length === 0) throw new Error("Usuário não encontrado.");
 
     return res.status(200).json(rows[0]);
@@ -119,26 +121,96 @@ export async function getMe(req, res) {
   }
 }
 
-// ====================== UPDATE ME ======================
-export async function updateMe(req, res) {
+export async function getAllUsers(req, res) {
   try {
-    const { username, email } = req.body;
-
-    await pool.query(
-      "UPDATE usuarios SET username = $1, email = $2, updated_at = NOW() WHERE id = $3",
-      [username, email, req.userId]
-    );
-
     const { rows } = await pool.query(
-      "SELECT id, username, email, googleid, authprovider, created_at, updated_at FROM usuarios WHERE id = $1",
-      [req.userId]
+      "SELECT id, username, email, endereco, telefone, type as isadmin FROM usuarios"
     );
+    if (rows.length === 0) throw new Error("Usuário não encontrado.");
 
-    return res.status(200).json(rows[0]);
+    return res.status(200).json(rows);
   } catch (error) {
     return res.status(404).json({ message: error.message });
   }
 }
+
+export async function atualizarPermissao(req, res) {
+  console.log("CHEGUEI AQ NA PAZ");
+
+  try {
+    const { id, isadmin } = req.body;
+
+    console.log(id, isadmin)
+
+    if (!id) return res.status(400).json({ message: "ID não enviado." });
+
+    const query = `
+      UPDATE usuarios
+      SET type = $1
+      WHERE id = $2
+      RETURNING type
+    `;
+
+    const { rows } = await pool.query(query, [isadmin, id]);
+
+    if (rows.length === 0) {
+      return res.status(404).json({ message: "Usuário não encontrado." });
+    }
+
+    return res.status(200).json(rows[0].type);
+  } catch (error) {
+    console.error("Erro ao atualizar:", error);
+    return res.status(500).json({ message: error.message });
+  }
+}
+
+
+
+
+// ====================== UPDATE ME ======================
+export async function updateMe(req, res) {
+  try {
+    const { username, email, endereco, telefone } = req.body;
+    const userId = req.user.id;
+
+    // Campos que não são nulos ou indefinidos
+    const fields =  [];
+    const values = [];
+    let idx = 1;
+
+    if (username != null) {
+      fields.push(`username = $${idx++}`);
+      values.push(username);
+    }
+    if (email != null) {
+      fields.push(`email = $${idx++}`);
+      values.push(email);
+    }
+    if (endereco != null) {
+      fields.push(`endereco = $${idx++}`);
+      values.push(endereco);
+    }
+    if (telefone != null) {
+      fields.push(`telefone = $${idx++}`);
+      values.push(telefone);
+    }
+
+    if (fields.length === 0) {
+      return res.status(400).json({ message: "Nenhum campo para atualizar." });
+    }
+
+    const query = `UPDATE usuarios SET ${fields.join(", ")} WHERE id = $${idx} RETURNING id, username, email, endereco, telefone`;
+    console.log("teste 1")
+    values.push(userId);
+
+    const { rows } = await pool.query(query, values);
+
+    return res.status(200).json(rows[0]);
+  } catch (error) {
+    return res.status(400).json({ message: error.message });
+  }
+}
+
 
 // ====================== DELETE ME ======================
 export async function deleteMe(req, res) {
@@ -149,3 +221,35 @@ export async function deleteMe(req, res) {
     return res.status(404).json({ message: error.message });
   }
 }
+
+export async function deletarUsuario(req, res) {
+  try {
+    const { id } = req.params;
+
+    if (!id) {
+      return res.status(400).json({ message: "ID não enviado." });
+    }
+
+    const query = `
+      DELETE FROM usuarios
+      WHERE id = $1
+      RETURNING id
+    `;
+
+    const { rows } = await pool.query(query, [id]);
+
+    if (rows.length === 0) {
+      return res.status(404).json({ message: "Usuário não encontrado." });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Usuário deletado com sucesso.",
+      deletedId: rows[0].id,
+    });
+  } catch (error) {
+    console.error("Erro ao deletar usuário:", error);
+    return res.status(500).json({ message: error.message });
+  }
+}
+

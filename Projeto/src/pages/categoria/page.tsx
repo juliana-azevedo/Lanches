@@ -6,8 +6,8 @@ import deletarCategoria from "../../service/delete/deletarCategoria";
 import type { Categoria } from "../../contexts/mainContext";
 import { useMainContext } from "../../contexts/context";
 import listarProduto from "../../service/get/listarProduto";
-import { Button, Dialog, DialogActions, DialogTitle } from "@mui/material";
 import Alerta, {type alertProps}  from "../../components/alerta";
+import ConfirmDialog from "../../components/confirmDialog";
 
 export default function Categoria() {
   const { categorias, setCategorias, setProdutos, produtos } = useMainContext();
@@ -172,23 +172,15 @@ export default function Categoria() {
 
   return (
   <div className="min-h-screen bg-white bg-cover bg-fixed bg-center p-8 relative">
-
-      <Dialog open={open} onClose={() => setOpen(false)}>
-        <DialogTitle>Você tem certeza que deseja excluir essa categoria?</DialogTitle>
-        <DialogActions>
-          <Button onClick={() => {
-            setOpen(false);
-          }}>Cancelar</Button>
-          <Button variant="contained" onClick={() => {
-            if (selectedId !== null) {
-              handleDeletar(selectedId);
-            }
-             setOpen(false);
-          }}>
-            Aceitar
-          </Button>
-        </DialogActions>
-      </Dialog>
+      <ConfirmDialog
+        open={open}
+        title="Você tem certeza que deseja excluir essa categoria?"
+        onCancel={() => setOpen(false)}
+        onConfirm={() => {
+          if (selectedId) handleDeletar(selectedId);
+          setOpen(false);
+        }}
+      />
 
     <Alerta id={alertP?.id} text={alertP?.text}/>
 
