@@ -251,20 +251,6 @@ export default function Produto() {
     <div className="min-h-screen bg-white bg-cover bg-fixed bg-center p-8">
       <Alerta id={alertP?.id} text={alertP?.text} />
 
-      {!user?.isAdmin && (
-        <button
-          className="fixed left-10 top-4 bg-yellow-300 text-red-700 px-4 py-2 rounded-full shadow-lg font-bold flex flex-col cursor-pointer hover:scale-125"
-          onClick={() => {
-            navigate("/carrinho");
-          }}
-        >
-          <span>
-            🛒 Carrinho: {carrinho.reduce((acc, it) => acc + it.quantidade, 0)}
-          </span>
-          <span> Ir para carrinho</span>
-        </button>
-      )}
-
       <ConfirmDialog
         open={open}
         title="Você tem certeza que deseja excluir esse produto?"
@@ -274,16 +260,6 @@ export default function Produto() {
           setOpen(false);
         }}
       />
-
-      <button
-        onClick={() => {
-          localStorage.removeItem("token");
-          window.location.href = "/login";
-        }}
-        className=" absolute right-12 top-4 px-6 h-10 bg-red-400 rounded-full text-white hover:scale-125 transition-transform duration-200 cursor-pointer"
-      >
-        Sair
-      </button>
 
       <div className="bg-white/90 backdrop-blur-md rounded-3xl shadow-2xl p-8 max-w-6xl mx-auto border border-red-200">
         <h1 className="text-5xl font-extrabold text-center mb-10 text-red-600 drop-shadow">

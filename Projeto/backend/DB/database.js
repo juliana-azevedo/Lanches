@@ -69,7 +69,8 @@ async function ensureTables() {
         nome VARCHAR(100) NOT NULL,
         preco DECIMAL(10, 2) NOT NULL,
         categoria_id INTEGER REFERENCES categorias(id) ON DELETE CASCADE ON UPDATE CASCADE,
-        descricao TEXT
+        descricao TEXT,
+        estoque INTEGER DEFAULT 0
       );
     `);
 
@@ -93,6 +94,46 @@ async function ensureTables() {
     `);
 
     console.log("✅ Tabela 'categorias' verificada/criada com sucesso!");
+
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS pedidos (
+        id SERIAL PRIMARY KEY,
+        usuario_id VARCHAR(100) REFERENCES usuarios(id),
+        data TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        total DECIMAL(10, 2) NOT NULL,
+        status VARCHAR(50) DEFAULT 'Pendente'
+      );
+    `);
+
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS itens_pedido (
+        id SERIAL PRIMARY KEY,
+        pedido_id INTEGER REFERENCES pedidos(id) ON DELETE CASCADE,
+        produto_id INTEGER REFERENCES produtos(id),
+        quantidade INTEGER NOT NULL,
+        preco_unitario DECIMAL(10, 2) NOT NULL
+      );
+    `);
+
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS estoque_produtos (
+        id SERIAL PRIMARY KEY,
+        nome VARCHAR(100) NOT NULL UNIQUE,
+        quantidade INTEGER DEFAULT 0
+      );
+    `);
+
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS deposito (
+        id SERIAL PRIMARY KEY,
+        estoque_produto_id INTEGER REFERENCES estoque_produtos(id) ON DELETE CASCADE,
+        quantidade INTEGER NOT NULL,
+        fornecedor VARCHAR(100) NOT NULL,
+        data_entrada TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+
+    console.log("✅ Tabelas verificadas/criadas com sucesso!");
   } catch (err) {
     console.error("❌ Erro ao criar tabela:", err);
   }

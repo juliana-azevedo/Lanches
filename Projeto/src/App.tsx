@@ -8,7 +8,10 @@ import AdminClients from "./pages/usuarios/page";
 import UserProfile from "./pages/perfil/page";
 import AdminRoute, { AuthGuard } from "./authGuard";
 import Carrinho from "./pages/carrinho/page";
-
+import MeusPedidos from "./pages/meusPedidos/page";
+import AdminPedidos from "./pages/adminPedidos/page";
+import AdminDeposito from "./pages/adminDeposito/page";
+import PublicLayout from "./components/layout";
 
 export default function App() {
 
@@ -17,20 +20,24 @@ export default function App() {
   return (
     <Routes location={location} key={location.pathname}>
        
-        <Route path="*" element={<Default />} />
-        <Route path="/produto" element={<Produto />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
+        <Route element={<PublicLayout />}>
+          <Route path="*" element={<Default />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+        </Route>
         
         <Route element={<AuthGuard />}>
+          <Route path="/produto" element={<Produto />} />
           <Route path="/perfil" element={<UserProfile />} />
           <Route path="/carrinho" element={<Carrinho />} />
+          <Route path="/meus-pedidos" element={<MeusPedidos />} />
         </Route>
 
        <Route element={<AdminRoute />}>
           <Route path="/categoria" element={<Categoria />} />
           <Route path="/usuarios" element={<AdminClients />} />
-         
+          <Route path="/admin/pedidos" element={<AdminPedidos />} />
+          <Route path="/admin/deposito" element={<AdminDeposito />} />
         </Route> 
 
       </Routes>

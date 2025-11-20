@@ -20,7 +20,7 @@ export default function Register() {
     try {
       const response = await register(username, email, password, endereco, telefone);
       if (response.success) {
-        alert("Conta criada com sucesso!");
+        // alert("Conta criada com sucesso!");
         navigate("/login");
       }
     } catch (err: any) {

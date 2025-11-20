@@ -7,6 +7,7 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  
   const navigate = useNavigate();
 
 
@@ -22,7 +23,7 @@ export default function Login() {
             const token = response.data.token;
             localStorage.setItem("token", token);
 
-            alert("Login realizado com sucesso!");
+            // alert("Login realizado com sucesso!");
             // Redirecionar ou navegar:
             window.location.href = "/produto";
 

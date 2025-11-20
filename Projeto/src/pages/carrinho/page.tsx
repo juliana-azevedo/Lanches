@@ -2,10 +2,13 @@ import { useEffect, useState } from "react";
 import { useMainContext } from "../../contexts/context";
 import Alerta, { type alertProps } from "../../components/alerta";
 
+import { criarPedido } from "../../service/post/criarPedido";
+import { useNavigate } from "react-router-dom";
+
 export default function Carrinho() {
   const { carrinho, setCarrinho } = useMainContext();
   const [alertP, setAlertP] = useState<alertProps | null>();
-
+  const navigate = useNavigate();
 
   useEffect(()=> {
     console.log(carrinho)
@@ -50,6 +53,18 @@ export default function Carrinho() {
             return () => clearTimeout(timer);
         }
     }, [alertP]);
+
+    const finalizarPedido = async () => {
+      try {
+        await criarPedido(carrinho, parseFloat(total));
+        setCarrinho([]);
+        setAlertP({ id: 0, text: "Pedido finalizado com sucesso!" });
+        setTimeout(() => navigate("/meus-pedidos"), 2000);
+      } catch (error) {
+        console.error(error);
+        setAlertP({ id: 1, text: "Erro ao finalizar pedido." });
+      }
+    };
 
   return (
     <div className="min-h-screen p-10 bg-yellow-50">
@@ -123,12 +138,7 @@ export default function Carrinho() {
 
             <button
               className="w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-3 rounded-xl text-lg shadow-lg mt-4"
-              onClick={() => {
-                
-                
-                setCarrinho([])
-                setAlertP({ id: 0, text: "Pedido finalizado com sucesso!" })}
-              }
+              onClick={finalizarPedido}
             >
               Finalizar Pedido
             </button>
