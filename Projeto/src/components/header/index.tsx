@@ -31,10 +31,6 @@ export default function Header() {
               <Link to="/usuarios" className="hover:text-yellow-300 transition">Usuários</Link>
               <Link to="/admin/pedidos" className="hover:text-yellow-300 transition">Pedidos</Link>
               <Link to="/admin/deposito" className="hover:text-yellow-300 transition">Depósito</Link>
-              <Link to="/admin/deposito" className="hover:text-yellow-300 transition">Depósito</Link>
-              <Link to="/admin/deposito" className="hover:text-yellow-300 transition">Depósito</Link>
-              <Link to="/admin/deposito" className="hover:text-yellow-300 transition">Depósito</Link>
-              <Link to="/admin/deposito" className="hover:text-yellow-300 transition">Depósito</Link>
             </>
           ) : (
             <>
