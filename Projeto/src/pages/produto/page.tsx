@@ -366,7 +366,7 @@ export default function Produto() {
         )}
 
         {/* Lista */}
-        <div className="max-w-5xl mx-auto bg-white/95 shadow-xl rounded-2xl overflow-hidden border border-yellow-200">
+        <div className="max-w-7xl mx-auto bg-white/95 shadow-xl rounded-2xl overflow-hidden border border-yellow-200">
           {produtos.length === 0 ? (
             <p className="text-center py-10 text-gray-600 text-lg font-medium">
               Nenhum produto cadastrado ainda 😕
@@ -387,11 +387,14 @@ export default function Produto() {
                 <table className="min-w-full text-sm text-left text-gray-700">
                   <thead className="bg-yellow-100 text-red-600 uppercase text-xs border-b-2 border-yellow-200 sticky top-0 z-10">
                     <tr>
-                      <th className="py-4 px-6 font-semibold">Nome</th>
-                      <th className="py-4 px-6 font-semibold">Categoria</th>
-                      <th className="py-4 px-6 font-semibold">Preço</th>
-                      <th className="py-4 px-6 font-semibold">Descrição</th>
-                      <th className="py-4 px-6 font-semibold text-center">
+                      <th className="py-4 px-4 font-semibold">Nome</th>
+                      <th className="py-4 px-4 font-semibold">Categoria</th>
+                      <th className="py-4 px-4 font-semibold">Preço</th>
+                      {user?.isAdmin && (
+                        <th className="py-4 px-4 font-semibold">Lucro</th>
+                      )}
+                      <th className="py-4 px-4 font-semibold">Descrição</th>
+                      <th className="py-4 px-4 font-semibold text-center">
                         Opções
                       </th>
                     </tr>
@@ -400,23 +403,29 @@ export default function Produto() {
                   <tbody className="divide-y divide-yellow-100">
                     {produtosFiltrados.map((p, index) => {
                       const itemId = p.id ? p.id : index;
+                      const lucro = (p.preco ?? 0) - (p.custo ?? 0);
                       return (
                         <tr
                           key={itemId}
                           className="hover:bg-yellow-50 transition-all duration-150"
                         >
-                          <td className="py-4 px-6 font-medium">{p.nome}</td>
-                          <td className="py-4 px-6">{p.categoria}</td>
-                          <td className="py-4  font-semibold text-green-700">
+                          <td className="py-4 px-4 font-medium">{p.nome}</td>
+                          <td className="py-4 px-4">{p.categoria}</td>
+                          <td className="py-4 px-4 font-semibold text-green-700">
                             R$ {Number(p.preco).toFixed(2)}
                           </td>
+                          {user?.isAdmin && (
+                            <td className="py-4 px-4 font-semibold text-blue-600 whitespace-nowrap">
+                              R$ {lucro.toFixed(2)}
+                            </td>
+                          )}
 
-                          <td className="py-4 px-6">
-                            <div className="w-104 overflow-auto">
+                          <td className="py-4 px-4">
+                            <div className="w-64 overflow-auto max-h-20">
                               {p.descricao}
                             </div>
                           </td>
-                          <td className="py-4 px-6 text-center">
+                          <td className="py-4 px-4 text-center">
                             <div className="flex justify-center gap-3">
                               {user?.isAdmin ? (
                                 <>
