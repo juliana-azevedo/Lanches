@@ -4,6 +4,7 @@ import atualizarStatusPedido from "../../service/put/atualizarStatusPedido";
 import deletarPedido from "../../service/delete/deletarPedido";
 import { useNavigate } from "react-router-dom";
 import Alerta, { type alertProps } from "../../components/alerta";
+import ConfirmDialog from "../../components/confirmDialog";
 
 interface ItemPedido {
   nome: string;
@@ -14,6 +15,7 @@ interface ItemPedido {
 interface Pedido {
   id: number;
   data: string;
+  pagamento: string;
   total: string;
   status: string;
   cliente: string;
@@ -23,6 +25,9 @@ interface Pedido {
 export default function AdminPedidos() {
   const [pedidos, setPedidos] = useState<Pedido[]>([]);
   const [alertP, setAlertP] = useState<alertProps | null>();
+  const [open, setOpen] = useState(false);
+  const [selectedId, setSelectedId] = useState<number | null>(null);
+
   const navigate = useNavigate();
 
   const fetchPedidos = async () => {
@@ -55,25 +60,43 @@ export default function AdminPedidos() {
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm("Tem certeza que deseja excluir este pedido?")) return;
     try {
       await deletarPedido(id);
       setAlertP({ id: 0, text: "Pedido excluído com sucesso!" });
       fetchPedidos();
     } catch (error) {
       console.error(error);
-      setAlertP({ id: 1, text: "Erro ao excluir pedido. Verifique se está Cancelado ou Entregue." });
+      setAlertP({
+        id: 1,
+        text: "Erro ao excluir pedido. Verifique se está Cancelado ou Entregue.",
+      });
     }
   };
 
-  const statusOptions = ["Pendente", "Preparando", "Saiu para entrega", "Entregue", "Cancelado"];
+  const statusOptions = [
+    "Pendente",
+    "Preparando",
+    "Saiu para entrega",
+    "Entregue",
+    "Cancelado",
+  ];
 
   return (
     <div className="min-h-screen p-10 bg-gray-100">
       <Alerta id={alertP?.id} text={alertP?.text} />
-      
+
+      <ConfirmDialog
+        open={open}
+        title="Tem certeza que deseja excluir este pedido?"
+        onCancel={() => setOpen(false)}
+        onConfirm={() => {
+          if (selectedId) handleDelete(selectedId);
+          setOpen(false);
+        }}
+      />
+
       <div className="flex justify-between items-center mb-8 max-w-6xl mx-auto">
-         <button
+        <button
           onClick={() => navigate("/produto")}
           className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg shadow-md"
         >
@@ -106,24 +129,33 @@ export default function AdminPedidos() {
                       {new Date(pedido.data).toLocaleString()}
                     </p>
                   </div>
-                  <div className="text-right">
+                  <div className="text-center">
                     <p className="text-xl font-bold text-green-600">
                       R$ {pedido.total}
+                    </p>
+                    <p className="text-sm text-black font-semibold">
+                      Forma de pagamento: {pedido.pagamento.toUpperCase()}
                     </p>
                   </div>
                 </div>
 
                 <div className="bg-gray-50 p-4 rounded-lg border border-gray-100">
-                  <h3 className="font-semibold text-gray-700 mb-2 text-sm uppercase">Itens do Pedido:</h3>
+                  <h3 className="font-semibold text-gray-700 mb-2 text-sm uppercase">
+                    Itens do Pedido:
+                  </h3>
                   <ul className="space-y-1 text-sm">
-                    {pedido.itens && pedido.itens.map((item, idx) => (
-                      <li key={idx} className="flex justify-between text-gray-600">
-                        <span>
-                          {item.quantidade}x {item.nome}
-                        </span>
-                        <span>R$ {item.preco}</span>
-                      </li>
-                    ))}
+                    {pedido.itens &&
+                      pedido.itens.map((item, idx) => (
+                        <li
+                          key={idx}
+                          className="flex justify-between text-gray-600"
+                        >
+                          <span>
+                            {item.quantidade}x {item.nome}
+                          </span>
+                          <span>R$ {item.preco}</span>
+                        </li>
+                      ))}
                   </ul>
                 </div>
               </div>
@@ -135,11 +167,15 @@ export default function AdminPedidos() {
                   </label>
                   <select
                     value={pedido.status}
-                    onChange={(e) => handleStatusChange(pedido.id, e.target.value)}
+                    onChange={(e) =>
+                      handleStatusChange(pedido.id, e.target.value)
+                    }
                     className={`w-full p-2 rounded-lg border-2 font-semibold outline-none ${
-                        pedido.status === "Entregue" ? "border-green-200 bg-green-50 text-green-800" :
-                        pedido.status === "Cancelado" ? "border-red-200 bg-red-50 text-red-800" :
-                        "border-yellow-200 bg-yellow-50 text-yellow-800"
+                      pedido.status === "Entregue"
+                        ? "border-green-200 bg-green-50 text-green-800"
+                        : pedido.status === "Cancelado"
+                        ? "border-red-200 bg-red-50 text-red-800"
+                        : "border-yellow-200 bg-yellow-50 text-yellow-800"
                     }`}
                   >
                     {statusOptions.map((status) => (
@@ -150,9 +186,13 @@ export default function AdminPedidos() {
                   </select>
                 </div>
 
-                {(pedido.status === "Cancelado" || pedido.status === "Entregue") && (
+                {(pedido.status === "Cancelado" ||
+                  pedido.status === "Entregue") && (
                   <button
-                    onClick={() => handleDelete(pedido.id)}
+                    onClick={() => {
+                      setSelectedId(pedido.id);
+                      setOpen(true);
+                    }}
                     className="w-full bg-red-100 hover:bg-red-200 text-red-700 font-semibold py-2 rounded-lg transition-colors"
                   >
                     🗑️ Excluir Pedido

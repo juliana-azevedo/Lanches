@@ -2,6 +2,14 @@ import React, { useState } from "react";
 import login from "../../service/post/login";
 import { useNavigate } from "react-router-dom";
 
+interface ApiError {
+  response?: {
+    data?: {
+      message?: string;
+    };
+  };
+}
+
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -28,9 +36,10 @@ export default function Login() {
             window.location.href = "/produto";
 
         }
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const error = err as ApiError;
       setError(
-        err.response?.data?.message || "Erro ao tentar fazer login. Tente novamente."
+        error.response?.data?.message || "Erro ao tentar fazer login. Tente novamente."
       );
     } finally {
       setLoading(false);
@@ -92,5 +101,3 @@ export default function Login() {
     </div>
   );
 };
-
-

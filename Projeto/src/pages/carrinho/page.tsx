@@ -8,11 +8,13 @@ import { useNavigate } from "react-router-dom";
 export default function Carrinho() {
   const { carrinho, setCarrinho } = useMainContext();
   const [alertP, setAlertP] = useState<alertProps | null>();
+  const [pagamento, setPagamento] = useState<string>("credito");
+
   const navigate = useNavigate();
 
-  useEffect(()=> {
-    console.log(carrinho)
-  },[])
+  useEffect(() => {
+    console.log(carrinho);
+  }, []);
 
   const removerItem = (id: number) => {
     setCarrinho(carrinho.filter((item) => item.id !== id));
@@ -45,31 +47,40 @@ export default function Carrinho() {
     .reduce((acc, item) => acc + item.preco * item.quantidade, 0)
     .toFixed(2);
 
-    useEffect(() => {
-        if (alertP !== null) {
-            const timer = setTimeout(() => {
-            setAlertP(null);
-            }, 5000);
-            return () => clearTimeout(timer);
-        }
-    }, [alertP]);
+  useEffect(() => {
+    if (alertP !== null) {
+      const timer = setTimeout(() => {
+        setAlertP(null);
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [alertP]);
 
-    const finalizarPedido = async () => {
-      try {
-        await criarPedido(carrinho, parseFloat(total));
-        setCarrinho([]);
-        setAlertP({ id: 0, text: "Pedido finalizado com sucesso!" });
-        setTimeout(() => navigate("/meus-pedidos"), 2000);
-      } catch (error) {
-        console.error(error);
-        setAlertP({ id: 1, text: "Erro ao finalizar pedido." });
+  const finalizarPedido = async () => {
+    try {
+      if (carrinho.length === 0) {
+        setAlertP({ id: 1, text: "Carrinho vazio!" });
+        return;
       }
-    };
+
+      if (pagamento === "") {
+        setAlertP({ id: 1, text: "Selecione um método de pagamento!" });
+        return;
+      }
+
+      await criarPedido(carrinho, parseFloat(total), pagamento);
+      setCarrinho([]);
+      setAlertP({ id: 0, text: "Pedido finalizado com sucesso!" });
+      setTimeout(() => navigate("/meus-pedidos"), 2000);
+    } catch (error) {
+      console.error(error);
+      setAlertP({ id: 1, text: "Erro ao finalizar pedido." });
+    }
+  };
 
   return (
     <div className="min-h-screen p-10 bg-yellow-50">
-
-    <Alerta id={alertP?.id} text={alertP?.text} />
+      <Alerta id={alertP?.id} text={alertP?.text} />
 
       <div className="max-w-4xl mx-auto bg-white shadow-xl rounded-3xl p-8 border border-yellow-300">
         <h1 className="text-4xl font-extrabold text-red-600 mb-6 text-center">
@@ -95,10 +106,7 @@ export default function Carrinho() {
                     Preço: <strong>R$ {item.preco}</strong>
                   </p>
                   <p className="text-gray-700">
-                    Subtotal:{" "}
-                    <strong>
-                      R$ {(item.preco * item.quantidade)}
-                    </strong>
+                    Subtotal: <strong>R$ {item.preco * item.quantidade}</strong>
                   </p>
                 </div>
 
@@ -131,7 +139,22 @@ export default function Carrinho() {
               </div>
             ))}
 
-            {/* TOTAL */}
+            <div>
+              <label className="block font-medium text-gray-600 mb-1">
+                Método de pagamento
+              </label>
+              <select
+                className="w-full p-2 border border-gray-300 rounded-md focus:ring-red-500 focus:border-red-500"
+                value={pagamento}
+                onChange={(e) => setPagamento(e.target.value)}
+              >
+                <option value="credito">Cartão de Crédito</option>
+                <option value="debito">Cartão de Débito</option>
+                <option value="pix">PIX</option>
+                <option value="dinheiro">Dinheiro</option>
+              </select>
+            </div>
+
             <div className="text-right text-2xl font-bold text-red-700 mt-8">
               Total: R$ {total}
             </div>

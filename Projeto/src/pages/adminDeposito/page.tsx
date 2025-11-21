@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ChangeEvent, type FormEvent } from "react";
 import listarEntradas from "../../service/get/listarEntradas";
 import criarEntrada from "../../service/post/criarEntrada";
 import atualizarEntrada from "../../service/put/atualizarEntrada";
@@ -49,11 +49,11 @@ export default function AdminDeposito() {
     if (dadosEntradas) setEntradas(dadosEntradas);
   };
 
-  const handleChange = (e: any) => {
+  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = async (e: any) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (!form.nome_produto || !form.quantidade || !form.fornecedor) {
       return setAlertP({ id: 1, text: "Preencha todos os campos!" });

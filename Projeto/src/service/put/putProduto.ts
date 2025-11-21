@@ -1,8 +1,8 @@
 import { api } from "../api.service";
 
-export default async function atualizarProduto(nome: string, preco: number, categoria_id: number, descricao: string, id: number) {
+export default async function atualizarProduto(nome: string, preco: number, categoria_id: number, descricao: string, id: number, custo: number) {
   try {
-    const response = await api.put("/produto/atualizarProduto", { nome, preco, categoria_id, descricao, id });
+    const response = await api.put("/produto/atualizarProduto", { nome, preco, categoria_id, descricao, id, custo });
     return {success: true, data: response.data};
   } catch (error) {
     console.error("Erro ao atualizar produto:", error);

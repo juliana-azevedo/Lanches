@@ -1,14 +1,14 @@
-
 import type { Produto } from "../../contexts/mainContext";
 import { api } from "../api.service";
 
 interface ApiProduto {
-  id: number,
+  id: number;
   nomeproduto: string;
   preco: number;
   descricao: string;
-  idcategoria: number
+  idcategoria: number;
   nomecategoria: string;
+  custo: number;
 }
 
 export default async function listarProduto() {
@@ -23,12 +23,13 @@ export default async function listarProduto() {
         descricao: itemApi.descricao,
         idcategoria: itemApi.idcategoria,
         categoria: itemApi.nomecategoria,
+        custo: itemApi.custo,
       };
     });
 
     return {
       success: true,
-      data: returnResponse, 
+      data: returnResponse,
     };
   } catch (error) {
     console.error("Erro ao listar produto:", error);

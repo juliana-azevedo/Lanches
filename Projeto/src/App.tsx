@@ -11,6 +11,7 @@ import Carrinho from "./pages/carrinho/page";
 import MeusPedidos from "./pages/meusPedidos/page";
 import AdminPedidos from "./pages/adminPedidos/page";
 import AdminDeposito from "./pages/adminDeposito/page";
+import AdminRelatorios from "./pages/adminRelatorios/page";
 import PublicLayout from "./components/layout";
 
 export default function App() {
@@ -38,6 +39,7 @@ export default function App() {
           <Route path="/usuarios" element={<AdminClients />} />
           <Route path="/admin/pedidos" element={<AdminPedidos />} />
           <Route path="/admin/deposito" element={<AdminDeposito />} />
+          <Route path="/admin/relatorios" element={<AdminRelatorios />} />
         </Route> 
 
       </Routes>

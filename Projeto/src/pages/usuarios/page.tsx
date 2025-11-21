@@ -15,11 +15,18 @@ export interface User {
   isadmin?: number;
 }
 
+interface ApiError {
+  response?: {
+    data?: {
+      message?: string;
+    };
+  };
+}
+
 export default function AdminClients() {
   const [clients, setClients] = useState<User[]>([]);
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(false);
-  const [error] = useState("");
   const [savingId, setSavingId] = useState<string | null>(null);
 
   const [open, setOpen] = useState(false);
@@ -48,10 +55,11 @@ export default function AdminClients() {
         );
 
       setClients(sorted);
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const error = err as ApiError;
       setAlertP({
         id: 1,
-        text: err?.response?.data?.message || "Erro ao carregar clientes.",
+        text: error?.response?.data?.message || "Erro ao carregar clientes.",
       });
     } finally {
       setLoading(false);
@@ -107,10 +115,11 @@ export default function AdminClients() {
         id: 0,
         text: "Cargo atualizado com sucesso!",
       });
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const error = err as ApiError;
       setAlertP({
         id: 1,
-        text: err?.response?.data?.message || "Erro ao atualizar cargo.",
+        text: error?.response?.data?.message || "Erro ao atualizar cargo.",
       });
     } finally {
       setSavingId(null);
@@ -198,7 +207,9 @@ export default function AdminClients() {
             </div>
 
             <div className="text-sm text-gray-500">
-              {loading ? "Carregando clientes..." : `${clients.length} clientes`}
+              {loading
+                ? "Carregando clientes..."
+                : `${clients.length} clientes`}
             </div>
           </div>
 
@@ -232,12 +243,8 @@ export default function AdminClients() {
                   >
                     <td className="py-3 px-2">{client.username}</td>
                     <td className="py-3 px-2">{client.email}</td>
-                    <td className="py-3 px-2">
-                      {client.endereco || "—"}
-                    </td>
-                    <td className="py-3 px-2">
-                      {client.telefone || "—"}
-                    </td>
+                    <td className="py-3 px-2">{client.endereco || "—"}</td>
+                    <td className="py-3 px-2">{client.telefone || "—"}</td>
 
                     <td className="py-3 px-2">
                       {client.isadmin === 1 ? (

@@ -11,6 +11,7 @@ interface ItemPedido {
 interface Pedido {
   id: number;
   data: string;
+  pagamento: string;
   total: string;
   status: string;
   cliente: string;
@@ -78,20 +79,28 @@ export default function MeusPedidos() {
                     <p className="text-lg font-bold text-gray-800 mt-1">
                       Total: R$ {pedido.total}
                     </p>
+
+                    <p className="text-lg font-bold text-gray-800 mt-1">
+                      Forma de pagamento: {pedido.pagamento.toUpperCase()}
+                    </p>
                   </div>
                 </div>
 
                 <div className="bg-gray-50 p-4 rounded-xl">
                   <h3 className="font-semibold text-gray-700 mb-2">Itens:</h3>
                   <ul className="space-y-2">
-                    {pedido.itens && pedido.itens.map((item, idx) => (
-                      <li key={idx} className="flex justify-between text-gray-600">
-                        <span>
-                          {item.quantidade}x {item.nome}
-                        </span>
-                        <span>R$ {item.preco}</span>
-                      </li>
-                    ))}
+                    {pedido.itens &&
+                      pedido.itens.map((item, idx) => (
+                        <li
+                          key={idx}
+                          className="flex justify-between text-gray-600"
+                        >
+                          <span>
+                            {item.quantidade}x {item.nome}
+                          </span>
+                          <span>R$ {item.preco}</span>
+                        </li>
+                      ))}
                   </ul>
                 </div>
               </div>

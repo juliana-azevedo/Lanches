@@ -68,6 +68,7 @@ async function ensureTables() {
         id SERIAL PRIMARY KEY,
         nome VARCHAR(100) NOT NULL,
         preco DECIMAL(10, 2) NOT NULL,
+        custo DECIMAL(10, 2) DEFAULT 0,
         categoria_id INTEGER REFERENCES categorias(id) ON DELETE CASCADE ON UPDATE CASCADE,
         descricao TEXT,
         estoque INTEGER DEFAULT 0
@@ -101,6 +102,7 @@ async function ensureTables() {
         usuario_id VARCHAR(100) REFERENCES usuarios(id),
         data TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         total DECIMAL(10, 2) NOT NULL,
+        pagamento VARCHAR(50) NOT NULL,
         status VARCHAR(50) DEFAULT 'Pendente'
       );
     `);

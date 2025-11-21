@@ -4,6 +4,7 @@ import { atualizarProduto, criarProduto, deletarProduto, listarProduto } from ".
 import { atualizarPermissao, createUser, deletarUsuario, getAllUsers, getMe, login, updateMe } from "./controllers/user.js";
 import { criarPedido, listarPedidos, atualizarStatusPedido, deletarPedido } from "./controllers/pedido.js";
 import { criarEntrada, listarEntradas, atualizarEntrada, deletarEntrada } from "./controllers/deposito.js";
+import { getVendasPorPeriodo, getPedidosPorPagamento, getLucroPorProduto } from "./controllers/relatorios.js";
 import { authMiddleware } from "./controllers/authMiddleware.js";
 
 
@@ -40,5 +41,9 @@ router.post("/deposito/criar", authMiddleware, criarEntrada);
 router.get("/deposito/listar", authMiddleware, listarEntradas);
 router.put("/deposito/atualizar", authMiddleware, atualizarEntrada);
 router.delete("/deposito/deletar/:id", authMiddleware, deletarEntrada);
+
+router.get("/relatorios/vendas", authMiddleware, getVendasPorPeriodo);
+router.get("/relatorios/pagamentos", authMiddleware, getPedidosPorPagamento);
+router.get("/relatorios/lucro", authMiddleware, getLucroPorProduto);
 
 export default router;

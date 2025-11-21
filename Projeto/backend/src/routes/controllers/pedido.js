@@ -3,17 +3,17 @@ import pool from "../../../DB/database.js";
 export async function criarPedido(req, res) {
   const client = await pool.connect();
   try {
-    const { carrinho, total } = req.body;
+    const { carrinho, total, pagamento } = req.body;
     const usuario_id = req.user.id;
 
     await client.query('BEGIN');
 
     const pedidoQuery = `
-      INSERT INTO pedidos (usuario_id, total)
-      VALUES ($1, $2)
+      INSERT INTO pedidos (usuario_id, total, pagamento)
+      VALUES ($1, $2, $3)
       RETURNING id;
     `;
-    const pedidoResult = await client.query(pedidoQuery, [usuario_id, total]);
+    const pedidoResult = await client.query(pedidoQuery, [usuario_id, total, pagamento]);
     const pedidoId = pedidoResult.rows[0].id;
 
     const itemQuery = `
@@ -43,7 +43,7 @@ export async function listarPedidos(req, res) {
     const isAdmin = req.user.isAdmin;
 
     let query = `
-      SELECT p.id, p.data, p.total, p.status, u.username as cliente,
+      SELECT p.id, p.data, p.total, p.pagamento, p.status, u.username as cliente,
       (
         SELECT json_agg(json_build_object('nome', pr.nome, 'quantidade', ip.quantidade, 'preco', ip.preco_unitario))
         FROM itens_pedido ip

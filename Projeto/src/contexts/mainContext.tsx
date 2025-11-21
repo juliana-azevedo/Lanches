@@ -15,6 +15,7 @@ export interface Produto {
   descricao: string;
   idcategoria?: number;
   categoria: string;
+  custo?: number;
 }
 export interface CarrinhoItem {
   id: number;

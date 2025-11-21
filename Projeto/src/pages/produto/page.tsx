@@ -8,7 +8,14 @@ import listarProduto from "../../service/get/listarProduto";
 import type { Produto } from "../../contexts/mainContext";
 import Alerta, { type alertProps } from "../../components/alerta";
 import ConfirmDialog from "../../components/confirmDialog";
-import { useNavigate } from "react-router-dom";
+
+interface FormState {
+  nome: string;
+  preco: string;
+  porcentagemLucro: string;
+  descricao: string;
+  categoria: string;
+}
 
 export default function Produto() {
   const {
@@ -20,9 +27,10 @@ export default function Produto() {
     setCarrinho,
   } = useMainContext();
   const { user } = useUserContext();
-  const [form, setForm] = useState<Produto>({
+  const [form, setForm] = useState<FormState>({
     nome: "",
-    preco: null,
+    preco: "",
+    porcentagemLucro: "",
     descricao: "",
     categoria: "",
   });
@@ -31,7 +39,6 @@ export default function Produto() {
   const [open, setOpen] = useState(false);
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [alertP, setAlertP] = useState<alertProps | null>();
-  const navigate = useNavigate();
 
   useEffect(() => {
     const reqCategorias = async () => {
@@ -58,26 +65,7 @@ export default function Produto() {
     e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
     const { name, value } = e.target;
-
-    if (name === "preco") {
-      const formattedValue = value.replace(/[^0-9.,]/g, "");
-      const normalized = formattedValue.replace(",", ".");
-
-      if (normalized === "") {
-        setForm({ ...form, preco: null });
-        return;
-      }
-      const match = normalized.match(/^(\d+)([.,](\d{0,2}))?$/);
-      if (match) {
-        setForm({ ...form, preco: Number(normalized) });
-      }
-      return;
-    }
-
-    setForm({
-      ...form,
-      [name]: value,
-    });
+    setForm({ ...form, [name]: value });
   };
 
   const handleSubmit = async (e: FormEvent) => {
@@ -88,6 +76,17 @@ export default function Produto() {
       return;
     }
 
+    const preco = parseFloat(form.preco);
+    const lucroPercent = form.porcentagemLucro ? parseFloat(form.porcentagemLucro) : 0;
+
+    if (lucroPercent < 0 || lucroPercent >= 100) {
+        setAlertP({ id: 1, text: "⚠️ Erro: A porcentagem de lucro deve ser entre 0 e 99.99!" });
+        return;
+    }
+
+    // Custo = Preço - (Preço * (Margem / 100))
+    const custo = preco - (preco * (lucroPercent / 100));
+
     const verifyNames = produtos.find(
       (cat) =>
         cat.nome.toLowerCase() === form.nome.toLowerCase() &&
@@ -97,100 +96,82 @@ export default function Produto() {
     if (verifyNames) {
       setAlertP({
         id: 1,
-        text: "⚠️ Erro: Já existe uma categoria com esse nome!",
+        text: "⚠️ Erro: Já existe um produto com esse nome!",
       });
       return;
     }
 
+    const categoriaId = categorias.find((c) => c.nome === form.categoria)?.id;
+    if (!categoriaId) return;
+
     if (editando !== null) {
-      const produtoEscolhido = produtos.find((cat) => cat.id === editando);
-
-      if (produtoEscolhido?.id == editando) {
-        const categoriaEscolhido = categorias.find(
-          (cat) => form.categoria === cat.nome
-        );
-
-        if (categoriaEscolhido && categoriaEscolhido.id) {
-          const result = await atualizarProduto(
-            form.nome,
-            form.preco,
-            categoriaEscolhido.id,
-            form.descricao,
-            produtoEscolhido.id
-          );
-
-          if (result.success) {
-            if (result.data === false) {
-              setAlertP({
-                id: 1,
-                text: "⚠️ Erro: Já existe um produto com esse nome!",
-              });
-              await new Promise((resolve) => setTimeout(resolve, 2000));
-              window.location.reload();
-              return;
-            }
-
-            produtoEscolhido.nome = form.nome;
-            produtoEscolhido.preco = form.preco;
-            produtoEscolhido.descricao = form.descricao;
-            produtoEscolhido.categoria = form.categoria;
-
-            setProdutos([...produtos]);
-            setEditando(null);
-          } else {
-            console.error("Erro ao atualizar produto:", result.error);
-          }
-        }
-      }
-      setEditando(null);
-    } else {
-      const categoriaEscolhido = categorias.find(
-        (cat) => form.categoria === cat.nome
+      const result = await atualizarProduto(
+        form.nome,
+        preco,
+        categoriaId,
+        form.descricao,
+        editando,
+        custo
       );
-      if (categoriaEscolhido && categoriaEscolhido.id) {
-        const result = await criarProduto(
-          form.nome,
-          form.preco,
-          categoriaEscolhido.id,
-          form.descricao
-        );
-        if (result.success) {
-          if (result.data === false) {
-            setAlertP({
-              id: 1,
-              text: "⚠️ Erro: Já existe um produto com esse nome!",
-            });
-            await new Promise((resolve) => setTimeout(resolve, 2000));
-            window.location.reload();
-            return;
-          }
 
-          const novo: Produto = {
-            id: result.data?.id,
-            nome: form.nome,
-            preco: form.preco,
-            descricao: form.descricao,
-            categoria: form.categoria,
-          };
-          setProdutos([...produtos, novo]);
-        }
+      if (result.success) {
+        setAlertP({ id: 0, text: "Produto atualizado com sucesso!" });
+        setEditando(null);
+        setForm({
+          nome: "",
+          preco: "",
+          porcentagemLucro: "",
+          descricao: "",
+          categoria: "",
+        });
+        const data = await listarProduto();
+        if (data && data.success && data.data) setProdutos(data.data);
+      } else {
+        setAlertP({ id: 1, text: "Erro ao atualizar produto." });
+      }
+    } else {
+      const result = await criarProduto(
+        form.nome,
+        preco,
+        categoriaId,
+        form.descricao,
+        custo
+      );
+
+      if (result.success) {
+        setAlertP({ id: 0, text: "Produto criado com sucesso!" });
+        setForm({
+          nome: "",
+          preco: "",
+          porcentagemLucro: "",
+          descricao: "",
+          categoria: "",
+        });
+        const data = await listarProduto();
+        if (data && data.success && data.data) setProdutos(data.data);
+      } else {
+        setAlertP({ id: 1, text: "Erro ao criar produto." });
       }
     }
-
-    setForm({ nome: "", preco: 0, descricao: "", categoria: "" });
   };
 
-  const handleEditar = (index: number) => {
-    const produtoEscolhido = produtos.find((cat) => cat.id === index);
-    if (produtoEscolhido) {
-      setForm({
-        nome: produtoEscolhido.nome,
-        preco: produtoEscolhido.preco,
-        descricao: produtoEscolhido.descricao,
-        categoria: produtoEscolhido.categoria,
-      });
-      setEditando(index);
+  const handleEditar = (prod: Produto) => {
+    let lucroPercent = "";
+    if (prod.preco && prod.custo) {
+        // Margem = ((Preço - Custo) / Preço) * 100
+        const margem = ((prod.preco - prod.custo) / prod.preco) * 100;
+        lucroPercent = margem.toFixed(2);
     }
+
+    setForm({
+      nome: prod.nome,
+      preco: prod.preco ? prod.preco.toString() : "",
+      porcentagemLucro: lucroPercent,
+      descricao: prod.descricao,
+      categoria: prod.categoria,
+    });
+    setEditando(prod.id || null);
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const handleDeleteClick = (id: number) => {
@@ -208,11 +189,14 @@ export default function Produto() {
     .filter(
       (p) =>
         p.nome.toLowerCase().includes(busca.toLowerCase()) ||
-        p.categoria.toLowerCase().includes(busca.toLowerCase()) ||
-        p.descricao.toLowerCase().includes(busca.toLowerCase())
+        (p.categoria &&
+          p.categoria.toLowerCase().includes(busca.toLowerCase())) ||
+        (p.descricao && p.descricao.toLowerCase().includes(busca.toLowerCase()))
     )
     .sort((a, b) => {
-      const categoriaCompare = a.categoria.localeCompare(b.categoria);
+      const catA = a.categoria || "";
+      const catB = b.categoria || "";
+      const categoriaCompare = catA.localeCompare(catB);
       if (categoriaCompare === 0) return a.nome.localeCompare(b.nome);
       return categoriaCompare;
     });
@@ -295,8 +279,24 @@ export default function Produto() {
               <input
                 type="number"
                 name="preco"
+                step="0.01"
                 placeholder="Exemplo: 18.90"
-                value={form.preco ?? ""}
+                value={form.preco}
+                onChange={handleChange}
+                className="w-full p-3 border-2 border-yellow-200 rounded-lg focus:ring-2 focus:ring-red-400 outline-none"
+              />
+            </div>
+
+            <div className="flex flex-col mb-4">
+              <label className="text-gray-700 font-medium mb-1">
+                📈 Margem de Lucro (%)
+              </label>
+              <input
+                type="number"
+                name="porcentagemLucro"
+                step="0.01"
+                placeholder="Exemplo: 20"
+                value={form.porcentagemLucro}
                 onChange={handleChange}
                 className="w-full p-3 border-2 border-yellow-200 rounded-lg focus:ring-2 focus:ring-red-400 outline-none"
               />
@@ -349,7 +349,8 @@ export default function Produto() {
                     setEditando(null);
                     setForm({
                       nome: "",
-                      preco: 0,
+                      preco: "",
+                      porcentagemLucro: "",
                       descricao: "",
                       categoria: "",
                     });
@@ -373,8 +374,6 @@ export default function Produto() {
           ) : (
             <div className="overflow-hidden max-h-screen flex flex-col">
               <div className="flex justify-end mx-2 my-2 flex-shrink-0">
-                {" "}
-                {/* <-- 1. Adicione flex-shrink-0 aqui */}
                 <input
                   type="text"
                   placeholder="🔎 Buscar produto, categoria ou descrição..."
@@ -422,7 +421,7 @@ export default function Produto() {
                               {user?.isAdmin ? (
                                 <>
                                   <button
-                                    onClick={() => handleEditar(itemId)}
+                                    onClick={() => handleEditar(p)}
                                     className="bg-yellow-400 hover:bg-yellow-500 text-white px-3 py-1.5 rounded-lg transition-all shadow-sm"
                                   >
                                     ✏️ Editar

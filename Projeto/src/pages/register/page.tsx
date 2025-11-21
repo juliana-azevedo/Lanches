@@ -2,6 +2,14 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import register from "../../service/post/register";
 
+interface ApiError {
+  response?: {
+    data?: {
+      message?: string;
+    };
+  };
+}
+
 export default function Register() {
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
@@ -23,9 +31,10 @@ export default function Register() {
         // alert("Conta criada com sucesso!");
         navigate("/login");
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const error = err as ApiError;
       setError(
-        err.response?.data?.message || "Erro ao tentar registrar. Tente novamente."
+        error.response?.data?.message || "Erro ao tentar registrar. Tente novamente."
       );
     } finally {
       setLoading(false);
